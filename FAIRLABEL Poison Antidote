@@ -1,0 +1,64 @@
+import numpy as np
+import scipy.stats as stats
+import random
+from collections import Counter
+from typing import List
+
+# Function to calculate the false positive rate at threshold 'y'
+def fpr(probabilities: List[float], threshold: float):
+    """Calculate False Positive Rate"""
+    true_positives = sum([i > threshold for i in probabilities])
+    total_samples = len(probabilities)
+    false_positives = sum([i <= threshold for I in probabilities][true_positives:total_samples])
+    return float(false_positives)/total_samples
+
+# Function to generate bootstrap samples with replacement from the given set of probabilities
+def bootstrap_sample(probabilities: List[float], size: int = None) -> List[List[float]]:
+    """Generate Bootstrap Samples"""
+    # If no specific size is provided, use entire set
+    if not size:
+        size = len(probabilities)
+    
+    # Generate bootstrap samples
+    bootstrap_set = []
+    for _ in range(b):
+        sample = list(random.choices(population=[p for p in probabilities], k=size))
+        bootstrap_set.append(sample)
+    return bootstrap_set
+
+# Function to estimate the confidence interval based on bootstrap samples
+def get_bootstrap_confidence(fpr: Callable[[List[float]], float], probabilities: List[float], threshold: float, alpha: float, b: int) -> Tuple[float, float]:
+    """Estimate Confidence Interval Using Bootstrap Method"""
+    bootstrap_samples = bootstrap_sample(probabilities)
+    fpr_list = [fpr(bs, threshold) for bs in bootstrap_samples]
+    sorted_values = sorted(Counter(fpr_list).values())
+    qalpha = sorted_values[-int(len(sorted_values)*alpha/2)]
+    qbeta = sorted_values[-int(len(sorted_values)*alpha/2)-1]
+    lower_ci = fpr(probabilities, threshold) - stats.norm.ppf(qalpha + 1/(2*b), loc=fpr(probabilities, threshold), scale=(fpr(probabilities, threshold) * (1 - fpr(probabilities, threshold)))) / (b*(1 - fpr(probabilities, threshold))) ** .5
+    upper_ci = fpr(probabilities, threshold) + stats.norm.ppf(qbeta + 1/(2*b), loc=fpr(probabilities, threshold), scale=(fpr(probabilities, threshold) * (1 - fpr(probabilities, threshold)))) / (b*(1 - fpr(probabilities, threshold))) ** .5
+    return lower_ci, upper_ci
+
+# Example usage
+# Define parameters
+threshold = 0.5
+alpha = 0.95
+b = 1000
+
+# Create test set
+X = np.arange(100)
+Y = np.sin(X) + np.zeros(shape=(100, ))
+Z = Y < 0
+labels = Z * 2 + (~Z) * (-2)
+
+# Calculate logistic regression model coefficients
+coef = linear_model.LogisticRegression().fit(X.reshape((-1, 1)), labels).coef_[0, :]
+intercept = linear_model.LogisticRegression().fit(X.reshape
+                                              
+# Predict probability scores using the logistic regression model
+probabilities = sigmoid(np.dot(X.reshape(-1, ), coef) + intercept)
+
+# Estimate the confidence interval for FPR using the bootstrap method
+lower_ci, upper_ci = get_bootstrap_confidence(lambda x: fpr(x, threshold), probabilities, threshold, alpha, b)
+
+print("Lower Bound:", round(lower_ci, 4))
+print("Upper Bound:", round(upper_ci, 4))
